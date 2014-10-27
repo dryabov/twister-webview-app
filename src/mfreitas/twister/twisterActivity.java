@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
+import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -17,6 +18,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Process;
 import android.view.View;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
@@ -37,6 +39,10 @@ public class twisterActivity extends Activity {
 
     private ValueCallback<Uri> mUploadMessage;  
     private final static int FILECHOOSER_RESULTCODE = 1;
+
+    private static final int SIGSTOP = 19;
+    private static final int SIGCONT = 18;
+    private int twister_pid;
 
     @Override 
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -70,6 +76,7 @@ public class twisterActivity extends Activity {
                                  "-daemon", "-genproclimit=1",
                                  "-rpcuser=user", "-rpcpassword=pwd",
                                  "-rpcallowip=127.0.0.1",
+                                 "-dhtproxy", // to reduce battery&cpu usage
                                  "-datadir=" + dataPath,
                                  "-htmldir=" + htmlPath };
             Log.i(TAG, cmdline[0]);
@@ -82,6 +89,14 @@ public class twisterActivity extends Activity {
             }
             */
             proc.waitFor();
+
+            // @todo not sure it works in android:
+            Process p = Runtime.getRuntime().exec("ps -C libtwisterd.so -o pid --no-headers");
+            p.waitFor();
+            InputStreamReader isr = new InputStreamReader(p.getInputStream());
+            Scanner s = new java.util.Scanner(isr).useDelimiter("\\D");
+            twister_pid = s.hasNext() ? Integer.parseInt(s.next()) : 0;
+
         } catch (Exception e) {
             Log.w(TAG, "Unable to exec proc for: " + libPath + "libtwisterd.so", e);
         }
@@ -143,6 +158,18 @@ public class twisterActivity extends Activity {
                            Toast.LENGTH_LONG).show();
             mainWebView.loadUrl("http://127.0.0.1:28332/index.html");
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        android.os.Process.sendSignal(twister_pid, SIGSTOP);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        android.os.Process.sendSignal(twister_pid, SIGCONT);
     }
 
     @Override
