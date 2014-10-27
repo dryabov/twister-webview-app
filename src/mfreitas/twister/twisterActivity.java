@@ -34,22 +34,21 @@ import android.util.Log;
 public class twisterActivity extends Activity {
     private static final String TAG = "twisterActivity";
     WebView mainWebView;
-    
+
     private ValueCallback<Uri> mUploadMessage;  
-    private final static int FILECHOOSER_RESULTCODE=1;
- 
+    private final static int FILECHOOSER_RESULTCODE = 1;
+
     @Override 
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {  
-      if(requestCode==FILECHOOSER_RESULTCODE)  
-      {  
-         if (null == mUploadMessage) return;  
-            Uri result = intent == null || resultCode != RESULT_OK ? null  
-                    : intent.getData();  
-            mUploadMessage.onReceiveValue(result);  
-            mUploadMessage = null;  
-      }
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        if (requestCode == FILECHOOSER_RESULTCODE) {
+            if (null == mUploadMessage) return;
+            Uri result = intent == null || resultCode != RESULT_OK ? null
+                    : intent.getData();
+            mUploadMessage.onReceiveValue(result);
+            mUploadMessage = null;
+        }
     }
- 
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -58,9 +57,9 @@ public class twisterActivity extends Activity {
         String htmlPath = this.getApplicationContext().getDir("html", Context.MODE_PRIVATE).getPath();
         InputStream is = this.getApplicationContext().getResources().openRawResource(R.raw.html);
         try {
-            streamToDir( is, htmlPath);
+            streamToDir(is, htmlPath);
         } catch (Exception e) {
-            Log.w(TAG, "unzip error",e);
+            Log.w(TAG, "unzip error", e);
         }
 
         Process proc = null;
@@ -84,14 +83,14 @@ public class twisterActivity extends Activity {
             */
             proc.waitFor();
         } catch (Exception e) {
-            Log.w(TAG, "Unable to exec proc for: " + libPath+"libtwisterd.so",e);
+            Log.w(TAG, "Unable to exec proc for: " + libPath + "libtwisterd.so", e);
         }
 
 
         setContentView(R.layout.main);
-        
+
         mainWebView = (WebView) findViewById(R.id.mainWebView);
-        
+
         WebSettings settings = mainWebView.getSettings();
         settings.setJavaScriptEnabled(true);
 
@@ -103,46 +102,42 @@ public class twisterActivity extends Activity {
 
         mainWebView.setWebViewClient(new MyCustomWebViewClient());
         mainWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-     
-     mainWebView.setWebChromeClient(new WebChromeClient()  
-    {  
-           //The undocumented magic method override  
-           //Eclipse will swear at you if you try to put @Override here  
-        // For Android 3.0+
-        public void openFileChooser(ValueCallback<Uri> uploadMsg) {  
 
-            mUploadMessage = uploadMsg;  
-            Intent i = new Intent(Intent.ACTION_GET_CONTENT);  
-            i.addCategory(Intent.CATEGORY_OPENABLE);  
-            i.setType("image/*");  
-            twisterActivity.this.startActivityForResult(Intent.createChooser(i,"File Chooser"), FILECHOOSER_RESULTCODE);  
-
-           }
-
-        // For Android 3.0+
-           public void openFileChooser( ValueCallback uploadMsg, String acceptType ) {
-           mUploadMessage = uploadMsg;
-           Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-           i.addCategory(Intent.CATEGORY_OPENABLE);
-           i.setType("*/*");
-           twisterActivity.this.startActivityForResult(
-           Intent.createChooser(i, "File Browser"),FILECHOOSER_RESULTCODE);
-           }
-
-        //For Android 4.1
-           public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture){
-               mUploadMessage = uploadMsg;  
-               Intent i = new Intent(Intent.ACTION_GET_CONTENT);  
-               i.addCategory(Intent.CATEGORY_OPENABLE);  
-               i.setType("image/*");  
-               twisterActivity.this.startActivityForResult( Intent.createChooser( i, "File Chooser" ), 
-               twisterActivity.FILECHOOSER_RESULTCODE );
-
-           }
-    });
-     
-        if (savedInstanceState == null)
+        mainWebView.setWebChromeClient(new WebChromeClient()
         {
+            //The undocumented magic method override
+            //Eclipse will swear at you if you try to put @Override here
+            // For Android 3.0+
+            public void openFileChooser(ValueCallback<Uri> uploadMsg) {
+                mUploadMessage = uploadMsg;
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("image/*");
+                twisterActivity.this.startActivityForResult(Intent.createChooser(i,"File Chooser"), FILECHOOSER_RESULTCODE);
+            }
+
+            // For Android 3.0+
+            public void openFileChooser( ValueCallback uploadMsg, String acceptType ) {
+                mUploadMessage = uploadMsg;
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("*/*");
+                twisterActivity.this.startActivityForResult(
+                Intent.createChooser(i, "File Browser"),FILECHOOSER_RESULTCODE);
+            }
+
+            //For Android 4.1
+            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
+                mUploadMessage = uploadMsg;
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("image/*");
+                twisterActivity.this.startActivityForResult( Intent.createChooser( i, "File Chooser" ),
+                        twisterActivity.FILECHOOSER_RESULTCODE );
+            }
+        });
+
+        if (savedInstanceState == null) {
             Toast.makeText(getApplicationContext(), 
                            "twister daemon initializing\nlink may take a while to work",
                            Toast.LENGTH_LONG).show();
@@ -152,52 +147,47 @@ public class twisterActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(event.getAction() == KeyEvent.ACTION_DOWN){
-            switch(keyCode)
-            {
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-                if(mainWebView.canGoBack() == true){
+                if (mainWebView.canGoBack() == true) {
                     mainWebView.goBack();
-                }else{
+                } else {
                     //finish();
                     return super.onKeyDown(keyCode, event);
                 }
                 return true;
             }
-
         }
         return super.onKeyDown(keyCode, event);
     }
-      
+
     @Override
-    protected void onSaveInstanceState(Bundle outState)
-    {
-      super.onSaveInstanceState(outState);
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
  
-      // Save the state of the WebView
-      mainWebView.saveState(outState);
+        // Save the state of the WebView
+        mainWebView.saveState(outState);
     }
-   
+
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState)
-    {
-      super.onRestoreInstanceState(savedInstanceState);
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
  
-      // Restore the state of the WebView
-      mainWebView.restoreState(savedInstanceState);
+        // Restore the state of the WebView
+        mainWebView.restoreState(savedInstanceState);
     }
-        
-    private void streamToDir( InputStream is, String outPath) throws IOException
-    {
+
+    private void streamToDir( InputStream is, String outPath) throws IOException {
         ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
         try {
             ZipEntry ze;
             while ((ze = zis.getNextEntry()) != null) {
-                if(!ze.isDirectory()) {
+                if (!ze.isDirectory()) {
                     String filename = ze.getName();
                     File outFile = new File(outPath + "/" + filename);
                     File parent = outFile.getParentFile();
-                    if(!parent.exists() && !parent.mkdirs()){
+                    if (!parent.exists() && !parent.mkdirs()) {
                         throw new IllegalStateException("Couldn't create dir: " + parent);
                     }
 
@@ -211,9 +201,9 @@ public class twisterActivity extends Activity {
                     stmOut.close();
                 }
             }
-         } finally {
-             zis.close();
-         }
+        } finally {
+            zis.close();
+        }
     }
 
     private class MyCustomWebViewClient extends WebViewClient {
@@ -222,19 +212,19 @@ public class twisterActivity extends Activity {
             view.loadUrl(url);
             return true;
         }
-        
+
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
-          // TODO Auto-generated method stub
-          super.onPageStarted(view, url, favicon);
+            // TODO Auto-generated method stub
+            super.onPageStarted(view, url, favicon);
         }
 
         @Override
         public void onPageFinished(WebView view, String url) {
-          // TODO Auto-generated method stub
-          super.onPageFinished(view, url);
+            // TODO Auto-generated method stub
+            super.onPageFinished(view, url);
         }
-        
+
         @Override
         public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
             handler.proceed("user", "pwd");
